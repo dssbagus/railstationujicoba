@@ -3584,3 +3584,4 @@
         
         if(messageCloseBtn) {
             messageCloseBtn.addEventListener('click', hideMessage);
+        }
