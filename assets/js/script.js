@@ -375,6 +375,33 @@ function loadGangguanOperasional() {
                 </table>
             </div>
         </div>
+                    <i class="fas fa-plus mr-2"></i>Tambah Baris
+                </button>
+            </div>
+            
+            <div class="overflow-x-auto">
+                <table id="gangguan-table" class="ibpr-table w-full">
+                    <thead>
+                        <tr class="bg-blue-600">
+                            <th rowspan="2" class="text-white">No.</th>
+                            <th rowspan="2" class="text-white">Tanggal</th>
+                            <th rowspan="2" class="text-white">Jenis Gangguan</th>
+                            <th colspan="3" class="text-white">Tindak Lanjut</th>
+                            <th rowspan="2" class="text-white">Petugas</th>
+                            <th rowspan="2" class="text-white">Aksi</th>
+                        </tr>
+                        <tr class="bg-blue-500">
+                            <th class="text-white">Lapor Ke</th>
+                            <th class="text-white">Jam</th>
+                            <th class="text-white">Penanganan Gangguan</th>
+                        </tr>
+                    </thead>
+                    <tbody id="gangguan-tbody">
+                        <!-- Data will be populated here -->
+                    </tbody>
+                </table>
+            </div>
+        </div>
     `;
     
     // Setup event listeners for this page
@@ -392,6 +419,10 @@ function loadRaiLibrary() {
             <p class="text-gray-600">Halaman RaiLibrary akan ditampilkan di sini.</p>
         </div>
     `;
+    
+    // Setup event listeners for this page
+    setupGangguanEventListeners();
+    renderGangguanTable();
 }
 
 // Gangguan Operasional Functions
@@ -556,6 +587,172 @@ function batalGangguan(id) {
 }
 
 // Make functions globally available
+window.editGangguan = editGangguan;
+window.simpanGangguan = simpanGangguan;
+window.batalGangguan = batalGangguan;
+
+// Gangguan Operasional Functions
+function setupGangguanEventListeners() {
+    const tambahBtn = document.getElementById('tambah-gangguan-btn');
+    if (tambahBtn) {
+        tambahBtn.addEventListener('click', tambahGangguanBaris);
+    }
+}
+
+function renderGangguanTable() {
+    const tbody = document.getElementById('gangguan-tbody');
+    if (!tbody) return;
+    
+    tbody.innerHTML = '';
+    
+    gangguanData.forEach((item, index) => {
+        const row = createGangguanRow(item, index + 1, false);
+        tbody.appendChild(row);
+    });
+}
+
+function createGangguanRow(data, no, isEditing = false) {
+    const row = document.createElement('tr');
+    row.dataset.id = data.id;
+    
+    if (isEditing) {
+        row.innerHTML = `
+            <td>${no}</td>
+            <td><input type="date" value="${data.tanggal || ''}" class="gangguan-input" data-field="tanggal"></td>
+            <td><input type="text" value="${data.jenisGangguan || ''}" class="gangguan-input" data-field="jenisGangguan" placeholder="Jenis Gangguan"></td>
+            <td><input type="text" value="${data.laporKe || ''}" class="gangguan-input" data-field="laporKe" placeholder="Lapor Ke"></td>
+            <td><input type="time" value="${data.jam || ''}" class="gangguan-input" data-field="jam"></td>
+            <td><textarea class="gangguan-input" data-field="penangananGangguan" placeholder="Penanganan Gangguan">${data.penangananGangguan || ''}</textarea></td>
+            <td><input type="text" value="${data.petugas || ''}" class="gangguan-input" data-field="petugas" placeholder="Nama Petugas"></td>
+            <td>
+                <button class="bg-green-500 text-white px-3 py-1 rounded text-xs mr-1 hover:bg-green-600" onclick="simpanGangguan(${data.id})">
+                    <i class="fas fa-save"></i> Simpan
+                </button>
+                <button class="bg-red-500 text-white px-3 py-1 rounded text-xs hover:bg-red-600" onclick="batalGangguan(${data.id})">
+                    <i class="fas fa-times"></i> Batal
+                </button>
+            </td>
+        `;
+    } else {
+        row.innerHTML = `
+            <td>${no}</td>
+            <td>${data.tanggal || '-'}</td>
+            <td class="text-left">${data.jenisGangguan || '-'}</td>
+            <td>${data.laporKe || '-'}</td>
+            <td>${data.jam || '-'}</td>
+            <td class="text-left">${data.penangananGangguan || '-'}</td>
+            <td>${data.petugas || '-'}</td>
+            <td>
+                <button class="bg-blue-500 text-white px-3 py-1 rounded text-xs mr-1 hover:bg-blue-600" onclick="editGangguan(${data.id})">
+                    <i class="fas fa-edit"></i> Edit
+                </button>
+            </td>
+        `;
+    }
+    
+    return row;
+}
+
+function tambahGangguanBaris() {
+    if (editingRowId !== null) {
+        showMessage('Selesaikan editing baris yang sedang aktif terlebih dahulu.');
+        return;
+    }
+    
+    const newId = Date.now(); // Simple ID generation
+    const newData = {
+        id: newId,
+        tanggal: '',
+        jenisGangguan: '',
+        laporKe: '',
+        jam: '',
+        penangananGangguan: '',
+        petugas: ''
+    };
+    
+    // Add to beginning of array
+    gangguanData.unshift(newData);
+    editingRowId = newId;
+    
+    renderGangguanTable();
+    
+    // Focus on first input
+    setTimeout(() => {
+        const firstInput = document.querySelector(`tr[data-id="${newId}"] .gangguan-input`);
+        if (firstInput) firstInput.focus();
+    }, 100);
+}
+
+function editGangguan(id) {
+    if (editingRowId !== null) {
+        showMessage('Selesaikan editing baris yang sedang aktif terlebih dahulu.');
+        return;
+    }
+    
+    editingRowId = id;
+    renderGangguanTable();
+}
+
+function simpanGangguan(id) {
+    const row = document.querySelector(`tr[data-id="${id}"]`);
+    if (!row) return;
+    
+    const inputs = row.querySelectorAll('.gangguan-input');
+    const updatedData = {};
+    let isValid = true;
+    
+    inputs.forEach(input => {
+        const field = input.dataset.field;
+        const value = input.value.trim();
+        
+        // Basic validation
+        if (field === 'tanggal' && !value) {
+            showMessage('Tanggal harus diisi.');
+            isValid = false;
+            return;
+        }
+        if (field === 'jenisGangguan' && !value) {
+            showMessage('Jenis Gangguan harus diisi.');
+            isValid = false;
+            return;
+        }
+        if (field === 'petugas' && !value) {
+            showMessage('Nama Petugas harus diisi.');
+            isValid = false;
+            return;
+        }
+        
+        updatedData[field] = value;
+    });
+    
+    if (!isValid) return;
+    
+    // Update data
+    const dataIndex = gangguanData.findIndex(item => item.id === id);
+    if (dataIndex !== -1) {
+        gangguanData[dataIndex] = { ...gangguanData[dataIndex], ...updatedData };
+    }
+    
+    editingRowId = null;
+    renderGangguanTable();
+    showMessage('Data berhasil disimpan.');
+}
+
+function batalGangguan(id) {
+    // If this is a new row (just added), remove it from data
+    const dataIndex = gangguanData.findIndex(item => item.id === id);
+    if (dataIndex !== -1) {
+        const isNewRow = !gangguanData[dataIndex].tanggal && !gangguanData[dataIndex].jenisGangguan;
+        if (isNewRow) {
+            gangguanData.splice(dataIndex, 1);
+        }
+    }
+    
+    editingRowId = null;
+    renderGangguanTable();
+}
+
+// Make gangguan functions globally available
 window.editGangguan = editGangguan;
 window.simpanGangguan = simpanGangguan;
 window.batalGangguan = batalGangguan;
