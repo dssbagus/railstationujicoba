@@ -78,16 +78,13 @@
             }
         ];
         
-        // Data dummy untuk Gangguan Operasional (Tambahkan ini bersama variabel data lainnya di bagian atas file)
+// Data dummy untuk Gangguan Operasional (Tambahkan ini bersama variabel data lainnya di bagian atas file)
 let gangguanData = [
     { no: 1, tanggal: '2025-09-15', jenis: 'Sinyal Masuk Error', laporKe: 'PK/OC', jam: '10:30', penanganan: 'Reset sistem persinyalan', petugas: 'Budi S.' },
     { no: 2, tanggal: '2025-09-16', jenis: 'Rel Patah KM 102+300', laporKe: 'JPJ', jam: '14:00', penanganan: 'Pemasangan klem darurat', petugas: 'Agus W.' }
 ];
 
-
-
-
-// Data dummy untuk Penjagaan Bentuk-Bentuk
+        // Data dummy untuk Penjagaan Bentuk-Bentuk
         let penjagaanBentukData = [
             { tanggal: '2025-09-13', ptp: 'PTP-01', bh: 'BH-01', bk: 'BK-01', ms: 'MS-01', catatan: 'Pemeriksaan rutin, semua normal.' },
             { tanggal: '2025-09-14', ptp: 'PTP-02', bh: 'BH-02', bk: 'BK-02', ms: 'MS-02', catatan: 'Ada sedikit kendala pada MS-02, perlu perhatian.' }
@@ -419,6 +416,7 @@ let gangguanData = [
         }
         // --- Akhir Fungsi Profil Stasiun ---
 
+        // Objek untuk menyimpan konten halaman
         // --- Fungsi untuk Tabel Gangguan Operasional ---
 // (Tambahkan kumpulan fungsi baru ini di mana saja bersama fungsi-fungsi lainnya, misalnya sebelum `function loadPage(pageName)`)
 
@@ -529,8 +527,7 @@ function addGangguanRow() {
     tableBody.appendChild(newRow);
 }
 
-// Objek untuk menyimpan konten halaman
-        const pages = {
+const pages = {
             'dashboard': `
                 <!-- Banner Informasi Besar -->
                 <div class="relative w-full h-36 bg-gradient-to-r from-[#3B82F6] to-[#8B5CF6] rounded-2xl p-6 mb-8 overflow-hidden shadow-lg flex items-center justify-between">
@@ -905,7 +902,47 @@ function addGangguanRow() {
                     </div>
                 </div>
             `,
-            'pegawai': `
+            'gangguan': `
+    <div class="bg-white rounded-xl shadow-md p-6 mb-8">
+        <div class="flex justify-between items-center mb-6 flex-wrap gap-4">
+            <h1 class="text-2xl font-bold text-gray-900">Laporan Gangguan Operasional</h1>
+            <div id="gangguan-edit-buttons-container" class="flex space-x-2">
+                <button id="gangguan-edit-btn" class="bg-blue-500 text-white font-semibold py-2 px-4 rounded-full shadow-md hover:bg-blue-600 transition-colors duration-300">Edit Data</button>
+                <button id="gangguan-save-btn" class="bg-green-500 text-white font-semibold py-2 px-4 rounded-full shadow-md hover:bg-green-600 transition-colors duration-300 hidden">Simpan</button>
+                <button id="gangguan-cancel-btn" class="bg-red-500 text-white font-semibold py-2 px-4 rounded-full shadow-md hover:bg-red-600 transition-colors duration-300 hidden">Batal</button>
+            </div>
+        </div>
+
+        <div class="overflow-x-auto">
+            <table class="min-w-full divide-y divide-gray-200 border">
+                <thead class="bg-blue-600 text-white">
+                    <tr>
+                        <th rowspan="2" class="px-4 py-2 text-center text-xs font-medium uppercase tracking-wider align-middle">No.</th>
+                        <th rowspan="2" class="px-4 py-2 text-center text-xs font-medium uppercase tracking-wider align-middle">Tanggal</th>
+                        <th rowspan="2" class="px-4 py-2 text-center text-xs font-medium uppercase tracking-wider align-middle">Jenis Gangguan</th>
+                        <th colspan="3" class="px-4 py-2 text-center text-xs font-medium uppercase tracking-wider">Tindak Lanjut</th>
+                        <th rowspan="2" class="px-4 py-2 text-center text-xs font-medium uppercase tracking-wider align-middle">Petugas</th>
+                        <th rowspan="2" id="gangguan-opsi-header" class="px-4 py-2 text-center text-xs font-medium uppercase tracking-wider align-middle hidden">Aksi</th>
+                    </tr>
+                    <tr>
+                        <th class="px-4 py-2 text-center text-xs font-medium uppercase tracking-wider">Lapor Ke</th>
+                        <th class="px-4 py-2 text-center text-xs font-medium uppercase tracking-wider">Jam</th>
+                        <th class="px-4 py-2 text-center text-xs font-medium uppercase tracking-wider">Penanganan Gangguan</th>
+                    </tr>
+                </thead>
+                <tbody class="bg-white divide-y divide-gray-200" id="gangguan-table-body">
+                    <!-- Data akan diisi oleh JavaScript -->
+                </tbody>
+            </table>
+        </div>
+        <div id="add-gangguan-row-container" class="mt-4 text-center hidden">
+            <button id="add-gangguan-row-btn" class="bg-blue-500 text-white font-semibold py-2 px-6 rounded-full shadow-md hover:bg-blue-600 transition-colors duration-300">Tambah Baris</button>
+        </div>
+    </div>
+`,
+
+
+'pegawai': `
                 <div id="pegawai-list-view">
                     <div class="bg-white rounded-xl shadow-md p-6 mb-8">
                         <div class="flex justify-between items-center mb-4">
@@ -3490,6 +3527,16 @@ function addGangguanRow() {
                 document.getElementById('penggunaan-kr-sm-cancel-btn-2').addEventListener('click', () => togglePenggunaanKrSmEditMode2(false));
                 document.getElementById('add-penggunaan-kr-sm-row-btn-2').addEventListener('click', addPenggunaanKrSmRow2);
             }
+
+} else if (pageName === 'gangguan') {
+    renderGangguanTable(false); // Render tabel saat halaman dimuat
+    // Tambahkan event listener untuk tombol-tombol
+    document.getElementById('gangguan-edit-btn').addEventListener('click', () => toggleGangguanEditMode(true));
+    document.getElementById('gangguan-save-btn').addEventListener('click', saveGangguanChanges);
+    document.getElementById('gangguan-cancel-btn').addEventListener('click', cancelGangguanChanges);
+    document.getElementById('add-gangguan-row-btn').addEventListener('click', addGangguanRow);
+}
+
         }
 
         function showModal(modalId) {
@@ -3578,12 +3625,3 @@ function addGangguanRow() {
         if(messageCloseBtn) {
             messageCloseBtn.addEventListener('click', hideMessage);
         }
-
-} else if (pageName === 'gangguan') {
-    renderGangguanTable(false); // Render tabel saat halaman dimuat
-    // Tambahkan event listener untuk tombol-tombol
-    document.getElementById('gangguan-edit-btn').addEventListener('click', () => toggleGangguanEditMode(true));
-    document.getElementById('gangguan-save-btn').addEventListener('click', saveGangguanChanges);
-    document.getElementById('gangguan-cancel-btn').addEventListener('click', cancelGangguanChanges);
-    document.getElementById('add-gangguan-row-btn').addEventListener('click', addGangguanRow);
-}
