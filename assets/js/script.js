@@ -78,6 +78,12 @@
             }
         ];
         
+		// Data dummy untuk Gangguan Operasional (Tambahkan ini bersama variabel data lainnya di bagian atas file)
+let gangguanData = [
+    { no: 1, tanggal: '2025-09-15', jenis: 'Sinyal Masuk Error', laporKe: 'PK/OC', jam: '10:30', penanganan: 'Reset sistem persinyalan', petugas: 'Budi S.' },
+    { no: 2, tanggal: '2025-09-16', jenis: 'Rel Patah KM 102+300', laporKe: 'JPJ', jam: '14:00', penanganan: 'Pemasangan klem darurat', petugas: 'Agus W.' }
+];
+		
         // Data dummy untuk Penjagaan Bentuk-Bentuk
         let penjagaanBentukData = [
             { tanggal: '2025-09-13', ptp: 'PTP-01', bh: 'BH-01', bk: 'BK-01', ms: 'MS-01', catatan: 'Pemeriksaan rutin, semua normal.' },
@@ -1396,38 +1402,44 @@
 
                 </div>
             `,
-                'gangguan': `
-      <div class="bg-white rounded-xl shadow-md p-6 mt-8">
-        <h2 class="text-xl font-bold text-gray-900 mb-4">Tabel Gangguan Operasional</h2>
-        <div class="overflow-x-auto">
-          <table id="gangguanTable" class="min-w-full border-collapse border">
-            <thead>
-              <tr class="bg-gray-200">
-                <th class="border px-4 py-2">No.</th>
-                <th class="border px-4 py-2">Tanggal</th>
-                <th class="border px-4 py-2">Jenis Gangguan</th>
-                <th class="border px-4 py-2">Tindak Lanjut</th>
-                <th class="border px-4 py-2">Petugas</th>
-                <th class="border px-4 py-2">Aksi</th>
-              </tr>
-              <tr class="bg-gray-100">
-                <th class="border px-4 py-2"></th>
-                <th class="border px-4 py-2"></th>
-                <th class="border px-4 py-2"></th>
-                <th class="border px-4 py-2">
-                  <div>Lapor Ke</div>
-                  <div>Jam</div>
-                  <div>Penanganan Gangguan</div>
-                </th>
-                <th class="border px-4 py-2"></th>
-                <th class="border px-4 py-2"></th>
-              </tr>
-            </thead>
-            <tbody></tbody>
-          </table>
+'gangguan': `
+    <div class="bg-white rounded-xl shadow-md p-6 mb-8">
+        <div class="flex justify-between items-center mb-6 flex-wrap gap-4">
+            <h1 class="text-2xl font-bold text-gray-900">Laporan Gangguan Operasional</h1>
+            <div id="gangguan-edit-buttons-container" class="flex space-x-2">
+                <button id="gangguan-edit-btn" class="bg-blue-500 text-white font-semibold py-2 px-4 rounded-full shadow-md hover:bg-blue-600 transition-colors duration-300">Edit Data</button>
+                <button id="gangguan-save-btn" class="bg-green-500 text-white font-semibold py-2 px-4 rounded-full shadow-md hover:bg-green-600 transition-colors duration-300 hidden">Simpan</button>
+                <button id="gangguan-cancel-btn" class="bg-red-500 text-white font-semibold py-2 px-4 rounded-full shadow-md hover:bg-red-600 transition-colors duration-300 hidden">Batal</button>
+            </div>
         </div>
-      </div>
-    `,
+
+        <div class="overflow-x-auto">
+            <table class="min-w-full divide-y divide-gray-200 border">
+                <thead class="bg-blue-600 text-white">
+                    <tr>
+                        <th rowspan="2" class="px-4 py-2 text-center text-xs font-medium uppercase tracking-wider align-middle">No.</th>
+                        <th rowspan="2" class="px-4 py-2 text-center text-xs font-medium uppercase tracking-wider align-middle">Tanggal</th>
+                        <th rowspan="2" class="px-4 py-2 text-center text-xs font-medium uppercase tracking-wider align-middle">Jenis Gangguan</th>
+                        <th colspan="3" class="px-4 py-2 text-center text-xs font-medium uppercase tracking-wider">Tindak Lanjut</th>
+                        <th rowspan="2" class="px-4 py-2 text-center text-xs font-medium uppercase tracking-wider align-middle">Petugas</th>
+                        <th rowspan="2" id="gangguan-opsi-header" class="px-4 py-2 text-center text-xs font-medium uppercase tracking-wider align-middle hidden">Aksi</th>
+                    </tr>
+                    <tr>
+                        <th class="px-4 py-2 text-center text-xs font-medium uppercase tracking-wider">Lapor Ke</th>
+                        <th class="px-4 py-2 text-center text-xs font-medium uppercase tracking-wider">Jam</th>
+                        <th class="px-4 py-2 text-center text-xs font-medium uppercase tracking-wider">Penanganan Gangguan</th>
+                    </tr>
+                </thead>
+                <tbody class="bg-white divide-y divide-gray-200" id="gangguan-table-body">
+                    <!-- Data akan diisi oleh JavaScript -->
+                </tbody>
+            </table>
+        </div>
+        <div id="add-gangguan-row-container" class="mt-4 text-center hidden">
+            <button id="add-gangguan-row-btn" class="bg-blue-500 text-white font-semibold py-2 px-6 rounded-full shadow-md hover:bg-blue-600 transition-colors duration-300">Tambah Baris</button>
+        </div>
+    </div>
+`,
             'railibrary': `
                 <div class="bg-white rounded-xl shadow-md p-6 mb-8">
                     <h1 class="text-2xl font-bold text-gray-900 mb-4">RaiLibrary</h1>
@@ -3188,6 +3200,115 @@
         }
         // --- End of Penggunaan KR SM functions ---
 
+// --- Fungsi untuk Tabel Gangguan Operasional ---
+// (Tambahkan kumpulan fungsi baru ini di mana saja bersama fungsi-fungsi lainnya, misalnya sebelum `function loadPage(pageName)`)
+
+/**
+ * Merender tabel Gangguan Operasional ke dalam DOM.
+ * @param {boolean} isEditing - True jika dalam mode edit, false jika dalam mode tampilan.
+ */
+function renderGangguanTable(isEditing = false) {
+    const tableBody = document.getElementById('gangguan-table-body');
+    if (!tableBody) return;
+
+    const opsiHeader = document.getElementById('gangguan-opsi-header');
+    if(opsiHeader) opsiHeader.style.display = isEditing ? 'table-cell' : 'none';
+
+    tableBody.innerHTML = '';
+    gangguanData.forEach(item => {
+        const row = document.createElement('tr');
+        if (isEditing) {
+            row.innerHTML = `
+                <td class="px-2 py-2 border align-middle"><input type="number" value="${item.no}" class="w-16 p-1 border rounded text-center"></td>
+                <td class="px-2 py-2 border align-middle"><input type="date" value="${item.tanggal}" class="w-full p-1 border rounded"></td>
+                <td class="px-2 py-2 border align-middle"><textarea class="w-full p-1 border rounded">${item.jenis}</textarea></td>
+                <td class="px-2 py-2 border align-middle"><input type="text" value="${item.laporKe}" class="w-full p-1 border rounded"></td>
+                <td class="px-2 py-2 border align-middle"><input type="time" value="${item.jam}" class="w-full p-1 border rounded"></td>
+                <td class="px-2 py-2 border align-middle"><textarea class="w-full p-1 border rounded">${item.penanganan}</textarea></td>
+                <td class="px-2 py-2 border align-middle"><input type="text" value="${item.petugas}" class="w-full p-1 border rounded"></td>
+                <td class="px-2 py-2 border text-center align-middle">
+                    <button class="text-red-500 hover:text-red-700 font-semibold" onclick="this.closest('tr').remove()">Hapus</button>
+                </td>
+            `;
+        } else {
+            row.innerHTML = `
+                <td class="px-4 py-2 whitespace-nowrap text-sm text-gray-800 text-center border align-middle">${item.no}</td>
+                <td class="px-4 py-2 whitespace-nowrap text-sm text-gray-800 text-center border align-middle">${item.tanggal}</td>
+                <td class="px-4 py-2 text-sm text-gray-800 text-left border align-middle">${item.jenis}</td>
+                <td class="px-4 py-2 whitespace-nowrap text-sm text-gray-800 text-center border align-middle">${item.laporKe}</td>
+                <td class="px-4 py-2 whitespace-nowrap text-sm text-gray-800 text-center border align-middle">${item.jam}</td>
+                <td class="px-4 py-2 text-sm text-gray-800 text-left border align-middle">${item.penanganan}</td>
+                <td class="px-4 py-2 whitespace-nowrap text-sm text-gray-800 text-center border align-middle">${item.petugas}</td>
+            `;
+        }
+        tableBody.appendChild(row);
+    });
+}
+
+/**
+ * Mengalihkan mode tampilan dan mode edit untuk tabel Gangguan Operasional.
+ * @param {boolean} isEditing - True untuk masuk mode edit, false untuk keluar.
+ */
+function toggleGangguanEditMode(isEditing) {
+    document.getElementById('gangguan-edit-btn').classList.toggle('hidden', isEditing);
+    document.getElementById('gangguan-save-btn').classList.toggle('hidden', !isEditing);
+    document.getElementById('gangguan-cancel-btn').classList.toggle('hidden', !isEditing);
+    document.getElementById('add-gangguan-row-container').classList.toggle('hidden', !isEditing);
+    renderGangguanTable(isEditing);
+}
+
+/**
+ * Menyimpan perubahan dari mode edit ke dalam variabel gangguanData.
+ */
+function saveGangguanChanges() {
+    const tableRows = document.querySelectorAll('#gangguan-table-body tr');
+    const newData = [];
+    tableRows.forEach(row => {
+        const inputs = row.querySelectorAll('input, textarea');
+        if (inputs.length >= 6) { // Pastikan baris memiliki input yang cukup
+            newData.push({
+                no: parseInt(inputs[0].value) || 0,
+                tanggal: inputs[1].value,
+                jenis: inputs[2].value,
+                laporKe: inputs[3].value,
+                jam: inputs[4].value,
+                penanganan: inputs[5].value,
+                petugas: inputs[6].value,
+            });
+        }
+    });
+    gangguanData = newData;
+    toggleGangguanEditMode(false);
+}
+
+/**
+ * Membatalkan mode edit dan kembali ke mode tampilan.
+ */
+function cancelGangguanChanges() {
+    toggleGangguanEditMode(false);
+}
+
+/**
+ * Menambahkan baris input baru yang kosong ke tabel.
+ */
+function addGangguanRow() {
+    const tableBody = document.getElementById('gangguan-table-body');
+    const newRow = document.createElement('tr');
+    const newNo = gangguanData.length > 0 ? Math.max(...gangguanData.map(item => item.no)) + 1 : 1;
+    newRow.innerHTML = `
+        <td class="px-2 py-2 border align-middle"><input type="number" value="${newNo}" class="w-16 p-1 border rounded text-center"></td>
+        <td class="px-2 py-2 border align-middle"><input type="date" class="w-full p-1 border rounded"></td>
+        <td class="px-2 py-2 border align-middle"><textarea class="w-full p-1 border rounded" placeholder="Jenis Gangguan"></textarea></td>
+        <td class="px-2 py-2 border align-middle"><input type="text" placeholder="Lapor Ke" class="w-full p-1 border rounded"></td>
+        <td class="px-2 py-2 border align-middle"><input type="time" class="w-full p-1 border rounded"></td>
+        <td class="px-2 py-2 border align-middle"><textarea class="w-full p-1 border rounded" placeholder="Penanganan"></textarea></td>
+        <td class="px-2 py-2 border align-middle"><input type="text" placeholder="Petugas" class="w-full p-1 border rounded"></td>
+        <td class="px-2 py-2 border text-center align-middle">
+            <button class="text-red-500 hover:text-red-700 font-semibold" onclick="this.closest('tr').remove()">Hapus</button>
+        </td>
+    `;
+    tableBody.appendChild(newRow);
+}
 
         function loadPage(pageName) {
             // Hapus kelas 'active' dari semua tautan
@@ -3396,6 +3517,13 @@
                 document.getElementById('penggunaan-kr-sm-save-btn-2').addEventListener('click', savePenggunaanKrSmChanges2);
                 document.getElementById('penggunaan-kr-sm-cancel-btn-2').addEventListener('click', () => togglePenggunaanKrSmEditMode2(false));
                 document.getElementById('add-penggunaan-kr-sm-row-btn-2').addEventListener('click', addPenggunaanKrSmRow2);
+			} else if (pageName === 'gangguan') {
+				renderGangguanTable(false); // Render tabel saat halaman dimuat
+				// Tambahkan event listener untuk tombol-tombol
+				document.getElementById('gangguan-edit-btn').addEventListener('click', () => toggleGangguanEditMode(true));
+				document.getElementById('gangguan-save-btn').addEventListener('click', saveGangguanChanges);
+				document.getElementById('gangguan-cancel-btn').addEventListener('click', cancelGangguanChanges);
+				document.getElementById('add-gangguan-row-btn').addEventListener('click', addGangguanRow);
             }
         }
 
@@ -3485,82 +3613,3 @@
         if(messageCloseBtn) {
             messageCloseBtn.addEventListener('click', hideMessage);
         }
-
-
-// --- Start of Gangguan Operasional functions ---
-function initializeGangguanTable() {
-  const tableBody = document.querySelector('#gangguanTable tbody');
-  if (!tableBody) return;
-
-  // Data dummy (nanti bisa diganti dengan API / database)
-  const data = [
-    {
-      no: 1,
-      tanggal: '2025-09-16',
-      jenisGangguan: 'Gangguan Jaringan',
-      laporKe: 'Teknisi A',
-      jam: '08:00',
-      penanganan: 'Restart router',
-      petugas: 'Budi'
-    },
-    {
-      no: 2,
-      tanggal: '2025-09-17',
-      jenisGangguan: 'Kehilangan Sinyal',
-      laporKe: 'Teknisi B',
-      jam: '09:30',
-      penanganan: 'Perbaikan antena',
-      petugas: 'Siti'
-    }
-  ];
-
-  // Bersihkan isi tabel
-  tableBody.innerHTML = '';
-
-  // Isi tabel
-  data.forEach(item => {
-    const row = document.createElement('tr');
-    row.innerHTML = `
-      <td class="border px-4 py-2 text-center">${item.no}</td>
-      <td class="border px-4 py-2 text-center">${item.tanggal}</td>
-      <td class="border px-4 py-2 text-center">${item.jenisGangguan}</td>
-      <td class="border px-4 py-2 text-center">${item.laporKe}</td>
-      <td class="border px-4 py-2 text-center">${item.jam}</td>
-      <td class="border px-4 py-2 text-center">${item.penanganan}</td>
-      <td class="border px-4 py-2 text-center">${item.petugas}</td>
-      <td class="border px-4 py-2 text-center">
-        <button class="edit-btn bg-blue-500 text-white px-2 py-1 rounded mr-2" data-id="${item.no}">Edit</button>
-        <button class="delete-btn bg-red-500 text-white px-2 py-1 rounded" data-id="${item.no}">Delete</button>
-      </td>
-    `;
-    tableBody.appendChild(row);
-  });
-
-  // Event tombol edit
-  document.querySelectorAll('.edit-btn').forEach(button => {
-    button.addEventListener('click', (e) => {
-      const id = e.target.getAttribute('data-id');
-      alert(`Edit row dengan ID: ${id}`);
-      // TODO: Tambah modal edit
-    });
-  });
-
-  // Event tombol delete
-  document.querySelectorAll('.delete-btn').forEach(button => {
-    button.addEventListener('click', (e) => {
-      const id = e.target.getAttribute('data-id');
-      if (confirm(`Yakin hapus row dengan ID: ${id}?`)) {
-        alert(`Row dengan ID ${id} dihapus`);
-        // TODO: Implementasikan hapus dari data lalu render ulang
-      }
-    });
-  });
-}
-
-// Panggil saat DOM siap
-document.getElementById('submenu-gangguan').addEventListener('click', () => {
-    document.getElementById('content-container').innerHTML = pages['gangguan'];
-    initializeGangguanTable();
-});
-
-// --- End of Gangguan Operasional functions ---
