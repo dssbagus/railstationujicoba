@@ -2130,6 +2130,8 @@
             // Isi data modal
             document.getElementById('move-employee-id').value = employee.id;
             document.getElementById('move-employee-name').value = employee.name;
+			document.getElementById('move-employee-nipp').value = employee.nipp;
+            document.getElementById('move-employee-position').value = employee.position;
             document.getElementById('move-employee-old-station').value = employee.station;
 
             // Isi dropdown stasiun baru
