@@ -1396,12 +1396,38 @@
 
                 </div>
             `,
-            'gangguan': `
-                <div class="bg-white rounded-xl shadow-md p-6 mb-8">
-                    <h1 class="text-2xl font-bold text-gray-900 mb-4">Gangguan Operasional</h1>
-                    <p class="text-gray-700">Ini adalah halaman untuk Gangguan Operasional.</p>
-                </div>
-            `,
+                'gangguan': `
+      <div class="bg-white rounded-xl shadow-md p-6 mt-8">
+        <h2 class="text-xl font-bold text-gray-900 mb-4">Tabel Gangguan Operasional</h2>
+        <div class="overflow-x-auto">
+          <table id="gangguanTable" class="min-w-full border-collapse border">
+            <thead>
+              <tr class="bg-gray-200">
+                <th class="border px-4 py-2">No.</th>
+                <th class="border px-4 py-2">Tanggal</th>
+                <th class="border px-4 py-2">Jenis Gangguan</th>
+                <th class="border px-4 py-2">Tindak Lanjut</th>
+                <th class="border px-4 py-2">Petugas</th>
+                <th class="border px-4 py-2">Aksi</th>
+              </tr>
+              <tr class="bg-gray-100">
+                <th class="border px-4 py-2"></th>
+                <th class="border px-4 py-2"></th>
+                <th class="border px-4 py-2"></th>
+                <th class="border px-4 py-2">
+                  <div>Lapor Ke</div>
+                  <div>Jam</div>
+                  <div>Penanganan Gangguan</div>
+                </th>
+                <th class="border px-4 py-2"></th>
+                <th class="border px-4 py-2"></th>
+              </tr>
+            </thead>
+            <tbody></tbody>
+          </table>
+        </div>
+      </div>
+    `,
             'railibrary': `
                 <div class="bg-white rounded-xl shadow-md p-6 mb-8">
                     <h1 class="text-2xl font-bold text-gray-900 mb-4">RaiLibrary</h1>
@@ -3532,5 +3558,9 @@ function initializeGangguanTable() {
 }
 
 // Panggil saat DOM siap
-document.addEventListener('DOMContentLoaded', initializeGangguanTable);
+document.getElementById('submenu-gangguan').addEventListener('click', () => {
+    document.getElementById('content-container').innerHTML = pages['gangguan'];
+    initializeGangguanTable();
+});
+
 // --- End of Gangguan Operasional functions ---
