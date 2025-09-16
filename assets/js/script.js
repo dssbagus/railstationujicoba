@@ -2117,12 +2117,76 @@
         }
         // --- End of Jalur Dilalui functions ---
 
-        // Fungsi untuk menangani aksi pindah
-        function handleMove(employeeId) {
-            console.log(`Menggerakkan pegawai dengan ID: ${employeeId}`);
-            // Tambahkan logika untuk memindahkan pegawai di sini
-            alert(`Fungsi memindahkan pegawai dengan ID ${employeeId} akan diimplementasikan.`);
+		// Fungsi untuk menangani aksi pindah
+		function handleMove(employeeId) {
+			openMoveEmployeeModal(employeeId);
+		}
+
+		// --- Start of Pindahkan Pegawai functions ---
+        function openMoveEmployeeModal(employeeId) {
+            const employee = employees.find(e => e.id === employeeId);
+            if (!employee) return;
+
+            // Isi data modal
+            document.getElementById('move-employee-id').value = employee.id;
+            document.getElementById('move-employee-name').value = employee.name;
+            document.getElementById('move-employee-old-station').value = employee.station;
+
+            // Isi dropdown stasiun baru
+            const stationSelect = document.getElementById('move-employee-new-station');
+            const stationDropdownInSidebar = document.querySelector('.sidebar select');
+            stationSelect.innerHTML = stationDropdownInSidebar.innerHTML; // Salin semua opsi dari sidebar
+            
+            // Hapus stasiun lama dari daftar pilihan
+            Array.from(stationSelect.options).forEach(option => {
+                if (option.value === employee.station) {
+                    option.remove();
+                }
+            });
+            // Pilih opsi pertama sebagai default
+            if (stationSelect.options.length > 0) {
+                 stationSelect.selectedIndex = 0;
+            }
+
+            // Tampilkan modal
+            showModal('move-employee-modal');
         }
+
+        function closeMoveEmployeeModal() {
+            hideModal('move-employee-modal');
+        }
+
+        function saveMoveEmployee() {
+            const employeeId = parseInt(document.getElementById('move-employee-id').value);
+            const newStation = document.getElementById('move-employee-new-station').value;
+
+            const employeeIndex = employees.findIndex(e => e.id === employeeId);
+            if (employeeIndex !== -1) {
+                // Update data stasiun di array dummy
+                employees[employeeIndex].station = newStation;
+                
+                // Tampilkan pesan sukses
+                showMessage(`Pegawai "${employees[employeeIndex].name}" berhasil dipindahkan ke stasiun ${newStation}.`);
+                
+                // Render ulang tabel pegawai untuk menampilkan perubahan
+                renderMainEmployeeTable(true); // Tetap dalam mode edit
+            }
+            
+            closeMoveEmployeeModal();
+        }
+
+        function setupMoveEmployeeModalListeners() {
+            document.getElementById('close-move-modal-btn').addEventListener('click', closeMoveEmployeeModal);
+            document.getElementById('cancel-move-btn').addEventListener('click', closeMoveEmployeeModal);
+            document.getElementById('save-move-btn').addEventListener('click', saveMoveEmployee);
+            // Tutup modal jika klik di luar konten
+            document.getElementById('move-employee-modal').addEventListener('click', (e) => {
+                if (e.target.id === 'move-employee-modal') {
+                    closeMoveEmployeeModal();
+                }
+            });
+        }
+        // --- End of Pindahkan Pegawai functions ---
 
         // --- Fungsi untuk Tabel Data Pegawai Utama ---
         function renderMainEmployeeTable(isEditing = false) {
@@ -3345,6 +3409,7 @@
                 document.getElementById('jamkerja-save-btn').addEventListener('click', saveJamKerjaChanges);
                 document.getElementById('jamkerja-cancel-btn').addEventListener('click', cancelJamKerjaChanges);
                 document.getElementById('add-jamkerja-row-btn').addEventListener('click', addJamKerjaRow);
+				setupMoveEmployeeModalListeners(); // <-- TAMBAHKAN BARIS INI
 
             } else if (pageName === 'profil') {
                 populateProfileData();
